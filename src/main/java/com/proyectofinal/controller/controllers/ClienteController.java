@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/cliente")
@@ -23,15 +25,29 @@ public class ClienteController {
     @GetMapping("/find/{id}")
     public ResponseEntity<ClienteDTO> findById(@PathVariable Long id){
 
-        ClienteDTO clienteDTO = this.clienteService.findById(id);
+        Optional<Cliente> clienteOptional = this.clienteService.findById(id);
 
-        return ResponseEntity.ok(clienteDTO);
+        if(clienteOptional.isPresent()){
+
+            Cliente cliente = clienteOptional.get();
+
+            ClienteDTO clienteDTO = this.modelMapper.map(cliente, ClienteDTO.class);
+
+            return ResponseEntity.ok(clienteDTO);
+        }
+
+        return ResponseEntity.badRequest().build();
     }
 
     @GetMapping("/find")
     public ResponseEntity<List<ClienteDTO>> findAll(){
 
-        return ResponseEntity.ok(this.clienteService.findAll());
+        List<ClienteDTO> clienteDTOList = this.clienteService.findAll()
+                .stream()
+                .map(cliente -> this.modelMapper.map(cliente, ClienteDTO.class))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(clienteDTOList);
     }
 
     @PostMapping("/save")
@@ -42,7 +58,7 @@ public class ClienteController {
             return ResponseEntity.badRequest().build();
         }
 
-        this.clienteService.save(clienteDTO);
+        this.clienteService.save(this.modelMapper.map(clienteDTO, Cliente.class));
 
         return ResponseEntity.created(new URI("/cliente/save")).build();
     }
@@ -55,24 +71,22 @@ public class ClienteController {
             return ResponseEntity.badRequest().build();
         }
 
-        Cliente cliente = this.modelMapper.map(this.clienteService.findById(id), Cliente.class);
+        Optional<Cliente> clienteOptional = this.clienteService.findById(id);
 
-        if(cliente.getIdCliente() != null){
+        if(clienteOptional.isPresent()){
 
-            ClienteDTO clienteActualizado = ClienteDTO.builder()
-                    .idCliente(id)
-                    .apellido(clienteDTO.getApellido())
-                    .nombre(clienteDTO.getNombre())
-                    .dni(clienteDTO.getDni())
-                    .build();
+            Cliente cliente = clienteOptional.get();
+            cliente.setApellido(clienteDTO.getApellido());
+            cliente.setNombre(clienteDTO.getNombre());
+            cliente.setDni(clienteDTO.getDni());
+            cliente.setVentaList(clienteDTO.getVentaList());
 
-            this.clienteService.save(clienteActualizado);
+            this.clienteService.save(cliente);
 
             return ResponseEntity.ok(clienteDTO);
-        } else {
-
-            return ResponseEntity.badRequest().build();
         }
+
+        return ResponseEntity.badRequest().build();
 
     }
 
@@ -84,15 +98,16 @@ public class ClienteController {
             return ResponseEntity.badRequest().build();
         }
 
-        Cliente cliente = this.modelMapper.map(this.clienteService.findById(id), Cliente.class);
+        Optional<Cliente> clienteOptional = this.clienteService.findById(id);
 
-        if(cliente.getIdCliente() != null){
+        if(clienteOptional.isPresent()){
+
             this.clienteService.deleteById(id);
 
             return ResponseEntity.ok("Cliente eliminado");
         } else{
 
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.ok("El cliente no existe");
         }
     }
 }
