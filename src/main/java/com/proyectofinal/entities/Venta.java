@@ -1,5 +1,6 @@
 package com.proyectofinal.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,11 +33,20 @@ public class Venta {
     )
     private Cliente cliente;
 
-    @ManyToMany
-    @JoinTable(
-            name = "venta_producto",
-            joinColumns = @JoinColumn(name = "id_venta"),
-            inverseJoinColumns = @JoinColumn(name = "id_producto")
-    )
-    private List<Producto> listaProductos = new ArrayList<>();
+//    @ManyToMany(cascade = CascadeType.ALL)
+//    @JoinTable(
+//            name = "venta_producto",
+//            joinColumns = @JoinColumn(name = "id_venta"),
+//            inverseJoinColumns = @JoinColumn(name = "id_producto_venta")
+//    )
+    @OneToMany(mappedBy = "venta")
+    @JsonIgnore
+    private List<VentaProducto> listaProductos;
+
+    public Venta(Cliente cliente, List<VentaProducto> ventaProductos, Double total){
+
+        this.cliente = cliente;
+        this.listaProductos = ventaProductos;
+        this.total = total;
+    }
 }

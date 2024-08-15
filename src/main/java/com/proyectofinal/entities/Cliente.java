@@ -23,6 +23,7 @@ public class Cliente {
     private String apellido;
     private String dni;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "cliente")
     private List<Venta> ventaList = new ArrayList<>();
 }

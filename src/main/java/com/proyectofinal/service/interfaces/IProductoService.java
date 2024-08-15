@@ -16,5 +16,5 @@ public interface IProductoService {
 
     void deleteById(Long id);
 
-    void procesarVenta(List<Producto> productos);
+   // double procesarVenta(List<Producto> productos);
 }

@@ -1,5 +1,7 @@
 package com.proyectofinal.service.interfaces;
 
+import com.proyectofinal.entities.Cliente;
+import com.proyectofinal.entities.Producto;
 import com.proyectofinal.entities.Venta;
 
 import java.util.List;
@@ -14,4 +16,6 @@ public interface IVentaService {
     void save(Venta venta);
 
     void deleteById(Long id);
+
+    public void procesarVenta(Cliente cliente, List<Producto> productos);
 }

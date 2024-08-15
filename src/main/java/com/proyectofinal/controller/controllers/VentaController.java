@@ -1,8 +1,7 @@
 package com.proyectofinal.controller.controllers;
 
+import com.proyectofinal.controller.dto.VentaAux;
 import com.proyectofinal.controller.dto.VentaDTO;
-import com.proyectofinal.entities.Venta;
-import com.proyectofinal.service.interfaces.IProductoService;
 import com.proyectofinal.service.interfaces.IVentaService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +19,6 @@ public class VentaController {
 
     @Autowired
     private IVentaService ventaService;
-    @Autowired
-    private IProductoService productoService;
     private final ModelMapper modelMapper = new ModelMapper();
 
     @GetMapping("/find")
@@ -36,11 +33,9 @@ public class VentaController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<VentaDTO> save(@RequestBody VentaDTO ventaDTO) throws URISyntaxException {
+    public ResponseEntity<VentaDTO> save(@RequestBody VentaAux ventaAux) throws URISyntaxException {
 
-        this.productoService.procesarVenta(ventaDTO.getListaProductos());
-
-        this.ventaService.save(this.modelMapper.map(ventaDTO, Venta.class));
+        this.ventaService.procesarVenta(ventaAux.getCliente(), ventaAux.getProductos());
 
         return ResponseEntity.created(new URI("/venta/save")).build();
     }

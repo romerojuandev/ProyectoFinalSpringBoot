@@ -35,31 +35,36 @@ public class ProductoServiceImpl implements IProductoService {
         this.productoDAO.deleteById(id);
     }
 
-    public boolean validarStock(List<Producto> productos) {
-        for (Producto producto : productos) {
-            Producto p = this.productoDAO.findById(producto.getCodigoProducto())
-                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
-
-            if (p.getCantidadDisponible() < producto.getCantidadSolicitada()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    // Método para procesar la venta
-    public void procesarVenta(List<Producto> productos) {
-        if (!validarStock(productos)) {
-            throw new IllegalArgumentException("Stock insuficiente para uno o más productos");
-        }
-
-        for (Producto producto : productos) {
-            Producto p = this.productoDAO.findById(producto.getCodigoProducto())
-                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
-
-            p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
-            this.productoDAO.save(p);
-        }
-        // Lógica adicional para completar la venta...
-    }
+//    public boolean validarStock(List<Producto> productos) {
+//        for (Producto producto : productos) {
+//            Producto p = this.productoDAO.findById(producto.getCodigoProducto())
+//                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
+//
+//            if (p.getCantidadDisponible() < producto.getCantidadSolicitada()) {
+//                return false;
+//            }
+//        }
+//        return true;
+//    }
+//
+//    // Método para procesar la venta
+//    public double procesarVenta(List<Producto> productos) {
+//        if (!validarStock(productos)) {
+//            throw new IllegalArgumentException("Stock insuficiente para uno o más productos");
+//        }
+//
+//        double total = 0;
+//
+//        for (Producto producto : productos) {
+//            Producto p = this.productoDAO.findById(producto.getCodigoProducto())
+//                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
+//
+//            total += (p.getCosto() * producto.getCantidadSolicitada());
+//            p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
+//            this.productoDAO.save(p);
+//        }
+//
+//        return total;
+//        // Lógica adicional para completar la venta...
+//    }
 }
