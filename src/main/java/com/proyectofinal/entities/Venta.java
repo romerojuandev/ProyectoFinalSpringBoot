@@ -24,12 +24,19 @@ public class Venta {
     private LocalDate fecha_venta;
     private Double total;
 
-    @OneToOne
-    @JoinColumn(name = "id_cliente", referencedColumnName = "id_cliente")
+    @ManyToOne
+    @JoinTable(
+            name = "ventas_por_cliente",
+            joinColumns = @JoinColumn(name = "id_venta"),
+            inverseJoinColumns = @JoinColumn(name = "id_cliente")
+    )
     private Cliente cliente;
 
-    @OneToMany
-    @JoinTable(name = "ventas_lista_productos", joinColumns = @JoinColumn(name = "id_venta"), inverseJoinColumns = @JoinColumn(name = "id_producto"))
-    private List<Producto> listaProductos = new ArrayList<Producto>();
-
+    @ManyToMany
+    @JoinTable(
+            name = "venta_producto",
+            joinColumns = @JoinColumn(name = "id_venta"),
+            inverseJoinColumns = @JoinColumn(name = "id_producto")
+    )
+    private List<Producto> listaProductos = new ArrayList<>();
 }

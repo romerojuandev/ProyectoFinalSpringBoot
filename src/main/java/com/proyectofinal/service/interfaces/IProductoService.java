@@ -15,4 +15,6 @@ public interface IProductoService {
     void save(Producto producto);
 
     void deleteById(Long id);
+
+    void procesarVenta(List<Producto> productos);
 }

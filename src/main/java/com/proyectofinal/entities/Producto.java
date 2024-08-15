@@ -19,6 +19,9 @@ public class Producto {
     private String marca;
     private Double costo;
 
+    @Transient
+    private int cantidadSolicitada;
+
     @Column(name = "cantidad_disponible")
-    private Double cantidadDisponible;
+    private int cantidadDisponible;
 }

@@ -1,5 +1,6 @@
 package com.proyectofinal.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,7 +23,6 @@ public class Cliente {
     private String apellido;
     private String dni;
 
-    @OneToMany
-    @JoinTable(name = "ventas_por_cliente", joinColumns = @JoinColumn(name = "id_cliente"), inverseJoinColumns = @JoinColumn(name = "id_venta"))
+    @OneToMany(mappedBy = "cliente")
     private List<Venta> ventaList = new ArrayList<>();
 }
