@@ -18,4 +18,6 @@ public interface IVentaService {
     void deleteById(Long id);
 
     public void procesarVenta(Cliente cliente, List<Producto> productos);
+
+    public void actulizarVenta(Cliente cliente, List<Producto> productos, Long id);
 }

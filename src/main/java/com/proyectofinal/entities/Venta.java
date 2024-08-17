@@ -33,12 +33,6 @@ public class Venta {
     )
     private Cliente cliente;
 
-//    @ManyToMany(cascade = CascadeType.ALL)
-//    @JoinTable(
-//            name = "venta_producto",
-//            joinColumns = @JoinColumn(name = "id_venta"),
-//            inverseJoinColumns = @JoinColumn(name = "id_producto_venta")
-//    )
     @OneToMany(mappedBy = "venta")
     @JsonIgnore
     private List<VentaProducto> listaProductos;

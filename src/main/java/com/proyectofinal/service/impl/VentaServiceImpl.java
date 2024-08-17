@@ -39,6 +39,16 @@ public class VentaServiceImpl implements IVentaService {
 
     @Override
     public void deleteById(Long id) {
+
+        Optional<Venta> ventaOptional = this.ventaDAO.findById(id);
+
+        if (ventaOptional.isPresent()){
+
+            Venta venta = ventaOptional.get();
+
+            devolverStock(venta.getListaProductos());
+        }
+
         this.ventaDAO.deleteById(id);
     }
 
@@ -52,30 +62,99 @@ public class VentaServiceImpl implements IVentaService {
         List<VentaProducto> ventaProductos = new ArrayList<>();
         double total = 0;
 
-        for (Producto producto : productos) {
+
+        if(validarStock(productos)){
+            for(Producto producto : productos){
+                Producto p = this.productoDAO.findById(producto.getCodigoProducto())
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
+
+                p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
+                productoDAO.save(p);
+
+                VentaProducto ventaProducto = new VentaProducto(null, p, producto.getCantidadSolicitada());
+                ventaProductos.add(ventaProducto);
+
+                total += p.getCosto() * producto.getCantidadSolicitada();
+            }
+
+            Venta venta = new Venta(cliente, ventaProductos, total);
+            venta.setFecha_venta(LocalDate.now());
+            ventaDAO.save(venta);
+
+            for (VentaProducto vp : ventaProductos) {
+                vp.setVenta(venta);
+                ventaProductoDAO.save(vp);
+            }
+        } else {
+
+            throw new IllegalArgumentException("Stock insuficiente");
+        }
+    }
+
+    public boolean validarStock(List<Producto> productos){
+
+        for(Producto producto : productos) {
             Producto p = this.productoDAO.findById(producto.getCodigoProducto())
                     .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
 
             if (p.getCantidadDisponible() < producto.getCantidadSolicitada()) {
-                throw new IllegalArgumentException("Stock insuficiente para el producto: " + p.getNombre());
+                return false;
             }
-
-            p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
-            productoDAO.save(p);
-
-            VentaProducto ventaProducto = new VentaProducto(null, p, producto.getCantidadSolicitada());
-            ventaProductos.add(ventaProducto);
-
-            total += p.getCosto() * producto.getCantidadSolicitada();
         }
 
-        Venta venta = new Venta(cliente, ventaProductos, total);
-        venta.setFecha_venta(LocalDate.now());
-        ventaDAO.save(venta);
+        return true;
+    }
 
-        for (VentaProducto vp : ventaProductos) {
-            vp.setVenta(venta);
-            ventaProductoDAO.save(vp);
+    public void actulizarVenta(Cliente cliente, List<Producto> productos, Long id){
+
+        Optional<Venta> ventaOptional = this.ventaDAO.findById(id);
+
+        if(ventaOptional.isPresent()){
+
+            List<VentaProducto> ventaProductos = new ArrayList<>();
+            double total = 0;
+
+            Venta venta = ventaOptional.get();
+
+            if(validarStock(productos)) {
+
+                devolverStock(venta.getListaProductos());
+
+                for (Producto producto : productos) {
+                    Producto p = this.productoDAO.findById(producto.getCodigoProducto())
+                            .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
+
+                    p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
+                    productoDAO.save(p);
+
+                    VentaProducto ventaProducto = new VentaProducto(null, p, producto.getCantidadSolicitada());
+                    ventaProductos.add(ventaProducto);
+
+                    total += p.getCosto() * producto.getCantidadSolicitada();
+                }
+
+                venta.setCliente(cliente);
+                venta.setListaProductos(ventaProductos);
+                venta.setTotal(total);
+                venta.setFecha_venta(LocalDate.now());
+                ventaDAO.save(venta);
+
+                for (VentaProducto vp : ventaProductos) {
+                    vp.setVenta(venta);
+                    ventaProductoDAO.save(vp);
+                }
+            }
+        }
+    }
+
+    public void devolverStock(List<VentaProducto> productos){
+
+        for (VentaProducto producto : productos){
+            Producto p = this.productoDAO.findById(producto.getProducto().getCodigoProducto())
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getProducto().getCodigoProducto()));
+
+            p.setCantidadDisponible(p.getCantidadDisponible() + producto.getProducto().getCantidadSolicitada());
+            productoDAO.save(p);
         }
     }
 }
