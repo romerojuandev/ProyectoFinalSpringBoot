@@ -3,6 +3,8 @@ package com.proyectofinal.entities;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @Entity
@@ -17,9 +19,9 @@ public class Producto {
     private Long codigoProducto;
     private String nombre;
     private String marca;
-    private Double costo;
+    private double costo;
 
-    @Transient
+    @Column(name = "cantidad_solicitada")
     private int cantidadSolicitada;
 
     @Column(name = "cantidad_disponible")

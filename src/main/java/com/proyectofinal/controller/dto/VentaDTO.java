@@ -1,7 +1,7 @@
 package com.proyectofinal.controller.dto;
 
 import com.proyectofinal.entities.Cliente;
-import com.proyectofinal.entities.VentaProducto;
+import com.proyectofinal.entities.Producto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,5 +22,5 @@ public class VentaDTO {
     private LocalDate fecha_venta;
     private Double total;
     private Cliente cliente;
-    private List<VentaProducto> listaProductos = new ArrayList<>();
+    private List<Producto> listaProductos = new ArrayList<>();
 }

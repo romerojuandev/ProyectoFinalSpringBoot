@@ -1,9 +1,11 @@
 package com.proyectofinal.service.interfaces;
 
 import com.proyectofinal.entities.Cliente;
+import com.proyectofinal.entities.DetalleVenta;
 import com.proyectofinal.entities.Producto;
 import com.proyectofinal.entities.Venta;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,7 +19,11 @@ public interface IVentaService {
 
     void deleteById(Long id);
 
-    public void procesarVenta(Cliente cliente, List<Producto> productos);
+    boolean validarStock(List<Producto> productos);
 
-    public void actulizarVenta(Cliente cliente, List<Producto> productos, Long id);
+    void restarStock(List<Producto> productoList);
+
+    double calcularTotal(List<Producto> productoList);
+
+    void devolverStock(Long id);
 }

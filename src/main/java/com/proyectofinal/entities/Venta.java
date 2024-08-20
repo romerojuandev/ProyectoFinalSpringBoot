@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,24 +24,19 @@ public class Venta {
 
     @Column(name = "fecha_venta")
     private LocalDate fecha_venta;
-    private Double total;
+    private double total;
 
     @ManyToOne
-    @JoinTable(
-            name = "ventas_por_cliente",
-            joinColumns = @JoinColumn(name = "id_venta"),
-            inverseJoinColumns = @JoinColumn(name = "id_cliente")
-    )
+    @JoinColumn(name = "id_cliente")
     private Cliente cliente;
 
-    @OneToMany(mappedBy = "venta")
+    @OneToMany
     @JsonIgnore
-    private List<VentaProducto> listaProductos;
+    @JoinTable(
+            name = "lista_productos",
+            joinColumns = @JoinColumn(name = "id_venta"),
+            inverseJoinColumns = @JoinColumn(name = "id_producto")
+    )
+    private List<Producto> listaProductos = new ArrayList<>();
 
-    public Venta(Cliente cliente, List<VentaProducto> ventaProductos, Double total){
-
-        this.cliente = cliente;
-        this.listaProductos = ventaProductos;
-        this.total = total;
-    }
 }

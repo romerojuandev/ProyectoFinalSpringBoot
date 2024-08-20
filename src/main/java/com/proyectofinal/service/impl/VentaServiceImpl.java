@@ -1,17 +1,15 @@
 package com.proyectofinal.service.impl;
 
-import com.proyectofinal.entities.Cliente;
+import com.proyectofinal.entities.DetalleVenta;
 import com.proyectofinal.entities.Producto;
 import com.proyectofinal.entities.Venta;
-import com.proyectofinal.entities.VentaProducto;
+import com.proyectofinal.persistence.interfaces.IDetalleVentaDAO;
 import com.proyectofinal.persistence.interfaces.IProductoDAO;
 import com.proyectofinal.persistence.interfaces.IVentaDAO;
-import com.proyectofinal.persistence.interfaces.IVentaProductoDAO;
 import com.proyectofinal.service.interfaces.IVentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -24,7 +22,7 @@ public class VentaServiceImpl implements IVentaService {
     @Autowired
     private IProductoDAO productoDAO;
     @Autowired
-    private IVentaProductoDAO ventaProductoDAO;
+    private IDetalleVentaDAO detalleVentaDAO;
 
     @Override
     public List<Venta> findAll() {
@@ -38,58 +36,11 @@ public class VentaServiceImpl implements IVentaService {
     }
 
     @Override
-    public void deleteById(Long id) {
-
-        Optional<Venta> ventaOptional = this.ventaDAO.findById(id);
-
-        if (ventaOptional.isPresent()){
-
-            Venta venta = ventaOptional.get();
-
-            devolverStock(venta.getListaProductos());
-        }
-
-        this.ventaDAO.deleteById(id);
-    }
-
-    @Override
     public void save(Venta venta) {
 
         this.ventaDAO.save(venta);
     }
 
-    public void procesarVenta(Cliente cliente, List<Producto> productos) {
-        List<VentaProducto> ventaProductos = new ArrayList<>();
-        double total = 0;
-
-
-        if(validarStock(productos)){
-            for(Producto producto : productos){
-                Producto p = this.productoDAO.findById(producto.getCodigoProducto())
-                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
-
-                p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
-                productoDAO.save(p);
-
-                VentaProducto ventaProducto = new VentaProducto(null, p, producto.getCantidadSolicitada());
-                ventaProductos.add(ventaProducto);
-
-                total += p.getCosto() * producto.getCantidadSolicitada();
-            }
-
-            Venta venta = new Venta(cliente, ventaProductos, total);
-            venta.setFecha_venta(LocalDate.now());
-            ventaDAO.save(venta);
-
-            for (VentaProducto vp : ventaProductos) {
-                vp.setVenta(venta);
-                ventaProductoDAO.save(vp);
-            }
-        } else {
-
-            throw new IllegalArgumentException("Stock insuficiente");
-        }
-    }
 
     public boolean validarStock(List<Producto> productos){
 
@@ -105,57 +56,65 @@ public class VentaServiceImpl implements IVentaService {
         return true;
     }
 
-    public void actulizarVenta(Cliente cliente, List<Producto> productos, Long id){
+    public double calcularTotal(List<Producto> productoList){
 
-        Optional<Venta> ventaOptional = this.ventaDAO.findById(id);
+        double total = 0;
 
-        if(ventaOptional.isPresent()){
+        for(Producto producto : productoList){
 
-            List<VentaProducto> ventaProductos = new ArrayList<>();
-            double total = 0;
+            Producto p = this.productoDAO.findById(producto.getCodigoProducto())
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
 
-            Venta venta = ventaOptional.get();
 
-            if(validarStock(productos)) {
+            total += (p.getCosto() * producto.getCantidadSolicitada());
+        }
 
-                devolverStock(venta.getListaProductos());
+        return total;
+    }
 
-                for (Producto producto : productos) {
-                    Producto p = this.productoDAO.findById(producto.getCodigoProducto())
-                            .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
+    public void restarStock(List<Producto> productoList){
 
-                    p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
-                    productoDAO.save(p);
+        for(Producto producto : productoList){
 
-                    VentaProducto ventaProducto = new VentaProducto(null, p, producto.getCantidadSolicitada());
-                    ventaProductos.add(ventaProducto);
+            Producto p = this.productoDAO.findById(producto.getCodigoProducto())
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getCodigoProducto()));
 
-                    total += p.getCosto() * producto.getCantidadSolicitada();
-                }
+            p.setCantidadDisponible(p.getCantidadDisponible() - producto.getCantidadSolicitada());
 
-                venta.setCliente(cliente);
-                venta.setListaProductos(ventaProductos);
-                venta.setTotal(total);
-                venta.setFecha_venta(LocalDate.now());
-                ventaDAO.save(venta);
-
-                for (VentaProducto vp : ventaProductos) {
-                    vp.setVenta(venta);
-                    ventaProductoDAO.save(vp);
-                }
-            }
+            this.productoDAO.save(p);
         }
     }
 
-    public void devolverStock(List<VentaProducto> productos){
+    @Override
+    public void devolverStock(Long id){
 
-        for (VentaProducto producto : productos){
-            Producto p = this.productoDAO.findById(producto.getProducto().getCodigoProducto())
-                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + producto.getProducto().getCodigoProducto()));
+        List<DetalleVenta> detalleVentaList = this.detalleVentaDAO.findAll();
+        List<DetalleVenta> listaFiltrada = new ArrayList<>();
 
-            p.setCantidadDisponible(p.getCantidadDisponible() + producto.getProducto().getCantidadSolicitada());
+        for (DetalleVenta detalle : detalleVentaList){
+
+            if(detalle.getIdVenta() == id){
+                listaFiltrada.add(detalle);
+            }
+
+            this.detalleVentaDAO.deleteById(detalle.getId());
+        }
+
+        for (DetalleVenta detalleVenta : listaFiltrada){
+            Producto p = this.productoDAO.findById(detalleVenta.getIdProducto())
+                    .orElseThrow(() -> new IllegalArgumentException("Producto no encontrado: " + detalleVenta.getIdProducto()));
+
+            p.setCantidadDisponible(p.getCantidadDisponible() + detalleVenta.getCantidad());
             productoDAO.save(p);
         }
+    }
+
+    @Override
+    public void deleteById(Long id){
+
+        devolverStock(id);
+
+        this.ventaDAO.deleteById(id);
     }
 }
 
