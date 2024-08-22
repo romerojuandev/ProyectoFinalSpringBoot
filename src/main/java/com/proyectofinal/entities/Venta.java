@@ -35,7 +35,7 @@ public class Venta {
     @JoinTable(
             name = "lista_productos",
             joinColumns = @JoinColumn(name = "id_venta"),
-            inverseJoinColumns = @JoinColumn(name = "id_producto")
+            inverseJoinColumns = @JoinColumn(unique = false, name = "id_producto")
     )
     private List<Producto> listaProductos = new ArrayList<>();
 

@@ -1,6 +1,8 @@
 package com.proyectofinal.controller.controllers;
 
+import com.proyectofinal.controller.dto.ProductoDTO;
 import com.proyectofinal.controller.dto.VentaDTO;
+import com.proyectofinal.controller.dto.VentaMayorDTO;
 import com.proyectofinal.entities.DetalleVenta;
 import com.proyectofinal.entities.Producto;
 import com.proyectofinal.entities.Venta;
@@ -53,6 +55,83 @@ public class VentaController {
         }
 
         return ResponseEntity.badRequest().build();
+    }
+
+    @GetMapping("productos/{codigo}")
+    public ResponseEntity<List<ProductoDTO>> listadoProductos(@PathVariable Long codigo){
+
+        Optional<Venta> ventaOptional = this.ventaService.findById(codigo);
+
+        if (ventaOptional.isPresent()){
+
+            Venta venta = ventaOptional.get();
+            List<ProductoDTO> productoDTOList = venta.getListaProductos()
+                    .stream()
+                    .map(producto -> this.modelMapper.map(producto, ProductoDTO.class))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(productoDTOList);
+        }
+
+        return ResponseEntity.badRequest().build();
+    }
+
+    @GetMapping("/{fecha_venta}")
+    public ResponseEntity<String> totalVentas(@PathVariable LocalDate fecha_venta){
+
+        List<Venta> ventaList = this.ventaService.findAll();
+        double total = 0;
+        int cantidad = 0;
+
+        for (Venta venta : ventaList){
+
+            if (venta.getFecha_venta().equals(fecha_venta)){
+
+                total += venta.getTotal();
+                cantidad ++;
+            }
+        }
+
+        if(cantidad > 0){
+
+            return  ResponseEntity.ok("El total recaudado el día " + fecha_venta + ", es de: $" + total + ", la cantidad de ventas fue de " + cantidad);
+        } else {
+
+            return   ResponseEntity.ok("El día " + fecha_venta + " no hubo ventas.");
+        }
+
+    }
+
+    @GetMapping("/mayor_venta")
+    public ResponseEntity<VentaMayorDTO> mayorVenta(){
+
+        List<Venta> ventaList = this.ventaService.findAll();
+        Venta mayorVenta = new Venta();
+
+        for (Venta venta : ventaList){
+
+            if (venta.getTotal() > mayorVenta.getTotal()){
+
+                mayorVenta = venta;
+            }
+        }
+
+        int contador = 0;
+
+        for (Producto producto : mayorVenta.getListaProductos()){
+
+            contador ++;
+        }
+
+        VentaMayorDTO ventaMayorDTO = VentaMayorDTO.builder()
+                .codigoVenta(mayorVenta.getCodigo_venta())
+                .total(mayorVenta.getTotal())
+                .cantidadProductos(contador)
+                .apellidoCliente(mayorVenta.getCliente().getApellido())
+                .nombreCliente(mayorVenta.getCliente().getNombre())
+                .build();
+
+        return ResponseEntity.ok(ventaMayorDTO);
     }
 
     @PostMapping("/save")

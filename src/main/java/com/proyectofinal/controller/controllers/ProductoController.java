@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -98,5 +99,25 @@ public class ProductoController {
 
             return ResponseEntity.ok("El producto no existe");
         }
+    }
+
+    @GetMapping("/falta_stock")
+    public ResponseEntity<List<ProductoDTO>> stockBajo(){
+
+        List<ProductoDTO> productoDTOList = new ArrayList<>();
+
+        List<Producto> productoList = this.productoService.findAll();
+
+        for (Producto producto : productoList){
+
+            if(producto.getCantidadDisponible() < 5){
+
+                ProductoDTO productoDTO = this.modelMapper.map(producto, ProductoDTO.class);
+
+                productoDTOList.add(productoDTO);
+            }
+        }
+
+        return ResponseEntity.ok(productoDTOList);
     }
 }
